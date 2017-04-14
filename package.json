@@ -1,0 +1,16 @@
+{
+  "name": "material_ui_tutorial",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "flexbox-react": "^4.3.1",
+    "lodash.range": "^3.2.0",
+    "material-ui": "^0.17.1",
+    "react": "^15.4.2",
+    "react-calendar-heatmap": "^1.1.0",
+    "react-dom": "^15.4.2",
+    "react-mounter": "^1.2.0"
+  }
+}

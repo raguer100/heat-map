@@ -1,0 +1,53 @@
+import React, { Component, constructor, State } from 'react';
+import Flexbox from 'flexbox-react';
+import CalendarHeatmap from 'react-calendar-heatmap';
+import range from 'lodash.range';
+
+const today = new Date('2017-12-31');
+
+export default class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.generateRandomValues = this.generateRandomValues.bind(this);
+    this.shiftDate = this.shiftDate.bind(this);
+  }
+
+  generateRandomValues(count, date = today) {
+    return range(count).map((index) => {
+      return {
+        date: this.shiftDate(date, -index)
+      };
+    })
+  }
+
+  shiftDate(date, numDays) {
+    const newDate = new Date(date);
+    newDate.setDate(newDate.getDate() + numDays);
+    return newDate;
+  }
+
+  hoverOver(value) {
+    return value.date;
+    //value ? `You're hovering over ${value.date} with value ${value.count}` : 'null'
+  }
+
+  render() {
+    return(
+      <div>
+        <Flexbox flexDirection="column">
+          <CalendarHeatmap
+            gutterSize={2}
+            subDomain={"hour"}
+            endDate={new Date('2017-12-31')}
+            numDays={365}
+            values={this.generateRandomValues(365)}
+            titleForValue={this.hoverOver}
+            tooltipDataAttrs={{'data-toggle': 'tooltip'}}
+            onClick={(value) => { alert(value.date) }}
+            />
+        </Flexbox>
+      </div>
+    );
+  }
+}
