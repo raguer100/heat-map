@@ -12,8 +12,13 @@ import { Tasks } from '../../api/tasks.js';
 class App extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      cal: new CalHeatMap(),
+      cal1: new CalHeatMap()
+    }
 
     this.addToDatabase = this.addToDatabase.bind(this);
+    this.subtractFromDatabase = this.subtractFromDatabase.bind(this);
     this.parser = this.parser.bind(this);
   }
 
@@ -29,8 +34,14 @@ class App extends Component {
     return stats;
   }
 
-  addToDatabase() {
+  subtractFromDatabase() {
     Meteor.call("taskUpdate", 1);
+    console.log(this.state.cal.options.highlight);
+  }
+
+  addToDatabase() {
+    Meteor.call("taskUpdate", 400);
+    console.log(this.state.cal.options.highlight);
     //Meteor.call('abc');
     /*Tasks.insert({
      "_id" : ObjectId("56f1281e6fdfb24e18f07a79"),
@@ -56,12 +67,90 @@ class App extends Component {
 
   componentWillReceiveProps(nextProps) {
     var node = document.getElementsByClassName("cal")[0];
-    while (node.hasChildNodes()) {
-      node.removeChild(node.lastChild);
-    }
-    node = document.getElementsByClassName("cal1")[0];
-    while (node.hasChildNodes()) {
-      node.removeChild(node.lastChild);
+
+    if(node.hasChildNodes()) {
+      this.state.cal.update(nextProps.tasks, this.parser);
+    } else {
+      this.state.cal.init({
+        itemSelector: document.getElementsByClassName("cal")[0],
+        legendColors: {
+          min: "#efefef",
+          max: "steelblue",
+          empty: "white"
+          // Will use the CSS for the missing keys
+        },
+        domain: "day",
+        subDomain: "hour",
+        data: nextProps.tasks,
+        cellSize: 40,
+        subDomainTextFormat: "%H:00",
+        domainGutter: 10,
+        domainMargin: 10,
+        columnLimit: 21,
+        rowLimit: 8,
+        range: 7,
+        displayLegend: true,
+        label: {
+          position: "bottom",
+          width: 46,
+          rotate: "null"
+        },
+        previousSelector: document.getElementsByClassName("fa fa-angle-left fa-3x 1")[0],
+        nextSelector: document.getElementsByClassName("fa fa-angle-right fa-3x 2")[0],
+        start: new Date('2015-10-21'),
+        afterLoadData: this.parser,
+        legend: [2, 4, 6, 8],
+        displayLegend: true,
+        legendVerticalPosition: "bottom",
+        legendHorizontalPosition: "center",
+        onClick: (date, nb) => { // if nb is empty, nb is null
+          var array = [];
+          var found = false;
+          array = this.state.cal.options.highlight;
+          var maxHighlightDateOld = _.max(this.state.cal.options.highlight);
+          var minHighlightDateOld = _.min(this.state.cal.options.highlight);
+          for(i=0; i<array.length; i++) {
+            if(date.toString() == array[i].toString()) {
+              found = true;
+              array.splice(i, 1);
+            }
+          }
+          if(array.length < 2 && !found) {
+            array.push(new Date(date));
+          }
+          this.state.cal.highlight(array);
+          //this.state.cal.highlight(new Date(date));
+          var maxHighlightDate = _.max(this.state.cal.options.highlight);
+          var minHighlightDate = _.min(this.state.cal.options.highlight);
+          console.log("min: " + minHighlightDate + "max : " + maxHighlightDate);
+          console.log("oldmin: " + minHighlightDateOld + "oldmax : " + maxHighlightDateOld);
+
+          if (!((maxHighlightDate === maxHighlightDateOld) && (minHighlightDate === minHighlightDateOld))) {
+            console.log("ESIT DEGIL!"); //executeQuery()
+          }
+	      }
+      });
+
+      this.state.cal1.init({
+        itemSelector: document.getElementsByClassName("cal1")[0],
+        domain: "month",
+        subDomain: "week",
+        subDomainTextFormat: "%d-%W",
+        domainLabelFormat: "%b %Y",
+        cellSize: 40,
+        domainMargin: 10,
+        domainGutter: 10,
+        weekStartOnMonday: true,
+        afterLoadData: this.parser,
+        range: 4,
+        displayLegend: false,
+        previousSelector: document.getElementsByClassName("fa fa-angle-left fa-3x")[0],
+        nextSelector: document.getElementsByClassName("fa fa-angle-right fa-3x")[0],
+        start: new Date(),
+        onClick: (date, nb) => { // if nb is empty, nb is null
+          this.state.cal.jumpTo(new Date(date), true);
+	      }
+      });
     }
     /*var parser = function(data) {
       var stats = {};
@@ -71,8 +160,6 @@ class App extends Component {
 
       return stats;
     }; */
-
-    var cal = new CalHeatMap();
     /*cal.init({
     legendColors: {
     min: "#efefef",
@@ -89,58 +176,7 @@ class App extends Component {
     displayLegend: false,
     onsiderMissingDataAsZero: true
     }); */
-    cal.init({
-      itemSelector: document.getElementsByClassName("cal")[0],
-      legendColors: {
-        min: "#efefef",
-        max: "steelblue",
-        empty: "white"
-        // Will use the CSS for the missing keys
-      },
-      domain: "day",
-      subDomain: "hour",
-      data: nextProps.tasks,
-      cellSize: 40,
-      subDomainTextFormat: "%H:00",
-      domainGutter: 10,
-      domainMargin: 10,
-      columnLimit: 21,
-      rowLimit: 8,
-      range: 7,
-      displayLegend: true,
-      label: {
-        position: "bottom",
-        width: 46,
-        rotate: "null"
-      },
-      previousSelector: document.getElementsByClassName("fa fa-angle-left fa-3x 1")[0],
-      nextSelector: document.getElementsByClassName("fa fa-angle-right fa-3x 2")[0],
-      start: new Date('2015-10-21'),
-      afterLoadData: this.parser,
-      legend: [2, 4, 6, 8],
-      displayLegend: true,
-      legendVerticalPosition: "bottom",
-      legendHorizontalPosition: "center",
-    });
 
-    var cal1 = new CalHeatMap();
-    cal1.init({
-      itemSelector: document.getElementsByClassName("cal1")[0],
-      domain: "month",
-      subDomain: "week",
-      subDomainTextFormat: "%d-%W",
-      domainLabelFormat: "%b %Y",
-      cellSize: 40,
-      domainMargin: 10,
-      domainGutter: 10,
-      weekStartOnMonday: true,
-      afterLoadData: this.parser,
-      range: 4,
-      displayLegend: false,
-      previousSelector: document.getElementsByClassName("fa fa-angle-left fa-3x")[0],
-      nextSelector: document.getElementsByClassName("fa fa-angle-right fa-3x")[0],
-      start: new Date(),
-    });
 
 
 
@@ -166,6 +202,7 @@ class App extends Component {
     if (this.props.tasks) {
       return(
         <div>
+          <FlatButton label="Subtract" onTouchTap={this.subtractFromDatabase} />
           <FlatButton label="Add" onTouchTap={this.addToDatabase} />
           <div className="cal1"></div>
           <i className="fa fa-angle-left fa-3x" aria-hidden="true"></i>
