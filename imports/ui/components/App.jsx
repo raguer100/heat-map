@@ -1,20 +1,19 @@
-import React, { Component, constructor, State } from 'react';
+import React, { Component, constructor } from 'react';
 import Flexbox from 'flexbox-react';
 import FlatButton from 'material-ui/FlatButton';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import { createContainer } from 'meteor/react-meteor-data';
 injectTapEventPlugin();
 CalHeatMap = require("cal-heatmap");
-import { Tasks } from '../../api/tasks.js';
+Moment = require('moment');
 
-class App extends Component {
+export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      cal: new CalHeatMap(),
-      cal1: new CalHeatMap()
+      calMonthHours: new CalHeatMap(),
+      calMonthWeeks: new CalHeatMap()
     }
 
     this.addToDatabase = this.addToDatabase.bind(this);
@@ -26,7 +25,7 @@ class App extends Component {
     return { muiTheme: getMuiTheme(baseTheme) };
   }
 
-  parser(data) { // saati 3 arttırıyor
+  parser(data) {
     var stats = {};
     for(i=0;i<data.length;i++) {
       stats[new Date(data[i].baslangic).getTime() / 1000] = data[i].toplamilerleme;
@@ -36,43 +35,20 @@ class App extends Component {
 
   subtractFromDatabase() {
     Meteor.call("taskUpdate", 1);
-    console.log(this.state.cal.options.highlight);
   }
 
   addToDatabase() {
     Meteor.call("taskUpdate", 400);
-    console.log(this.state.cal.options.highlight);
-    //Meteor.call('abc');
-    /*Tasks.insert({
-     "_id" : ObjectId("56f1281e6fdfb24e18f07a79"),
-    "baslangic" : ISODate("2015-10-21T02:00:00.000Z"),
-    "bitis" : ISODate("2015-10-21T03:00:00.000Z"),
-    "toplamilerleme" : 361,
-    "toplamilerlemezamani" : 2012,
-    "toplamhazirlikzamani" : 1054,
-    "toplamatilzamani" : 0,
-    "toplamkapalikalmazamani" : 534,
-    "duration" : 3600,
-    "ilerlemehizi" : 10.765407554672,
-    "rcmindeksi" : 82.7373305626617,
-    "ortalamaTork" : 45.0458891013384,
-    "ortalamaBaski" : 18.3983428935628,
-    "ortalamaAski" : NaN,
-    "ortalamaCmpBasinci" : NaN,
-    "ortalamaTakimDevri" : 890.70108349267,
-    "ortalamaCmpDevri" : 95.8062460165711,
-    "veriSayisi" : 1569
-    }); */
   }
 
   componentWillReceiveProps(nextProps) {
-    var node = document.getElementsByClassName("cal")[0];
+    var node = document.getElementsByClassName("calMonthHours")[0];
 
     if(node.hasChildNodes()) {
-      this.state.cal.update(nextProps.tasks, this.parser);
+      this.state.calMonthHours.update(nextProps.tasks, this.parser);
     } else {
-      this.state.cal.init({
-        itemSelector: document.getElementsByClassName("cal")[0],
+      this.state.calMonthHours.init({
+        itemSelector: document.getElementsByClassName("calMonthHours")[0],
         legendColors: {
           min: "#efefef",
           max: "steelblue",
@@ -95,9 +71,9 @@ class App extends Component {
           width: 46,
           rotate: "null"
         },
-        previousSelector: document.getElementsByClassName("fa fa-angle-left fa-3x 1")[0],
-        nextSelector: document.getElementsByClassName("fa fa-angle-right fa-3x 2")[0],
-        start: new Date('2015-10-21'),
+        previousSelector: document.getElementsByClassName("fa fa-angle-left fa-2x calMonthHoursButton")[0],
+        nextSelector: document.getElementsByClassName("fa fa-angle-right fa-2x calMonthHoursButton")[0],
+        start: new Date(),
         afterLoadData: this.parser,
         legend: [2, 4, 6, 8],
         displayLegend: true,
@@ -106,22 +82,30 @@ class App extends Component {
         onClick: (date, nb) => { // if nb is empty, nb is null
           var array = [];
           var found = false;
-          array = this.state.cal.options.highlight;
-          var maxHighlightDateOld = _.max(this.state.cal.options.highlight);
-          var minHighlightDateOld = _.min(this.state.cal.options.highlight);
+          array = this.state.calMonthHours.options.highlight;
+          var maxHighlightDateOld = _.max(this.state.calMonthHours.options.highlight);
+          var minHighlightDateOld = _.min(this.state.calMonthHours.options.highlight);
+
           for(i=0; i<array.length; i++) {
-            if(date.toString() == array[i].toString()) {
+            /*if(date.toString() == array[i].toString()) {
+              found = true;
+              array.splice(i, 1);
+            }*/
+
+            if(Moment(date).isSame(array[i])) {
               found = true;
               array.splice(i, 1);
             }
           }
+
           if(array.length < 2 && !found) {
             array.push(new Date(date));
           }
-          this.state.cal.highlight(array);
-          //this.state.cal.highlight(new Date(date));
-          var maxHighlightDate = _.max(this.state.cal.options.highlight);
-          var minHighlightDate = _.min(this.state.cal.options.highlight);
+
+          this.state.calMonthHours.highlight(array);
+
+          var maxHighlightDate = _.max(this.state.calMonthHours.options.highlight);
+          var minHighlightDate = _.min(this.state.calMonthHours.options.highlight);
           console.log("min: " + minHighlightDate + "max : " + maxHighlightDate);
           console.log("oldmin: " + minHighlightDateOld + "oldmax : " + maxHighlightDateOld);
 
@@ -131,8 +115,8 @@ class App extends Component {
 	      }
       });
 
-      this.state.cal1.init({
-        itemSelector: document.getElementsByClassName("cal1")[0],
+      this.state.calMonthWeeks.init({
+        itemSelector: document.getElementsByClassName("calMonthWeeks")[0],
         domain: "month",
         subDomain: "week",
         subDomainTextFormat: "%d-%W",
@@ -144,58 +128,14 @@ class App extends Component {
         afterLoadData: this.parser,
         range: 4,
         displayLegend: false,
-        previousSelector: document.getElementsByClassName("fa fa-angle-left fa-3x")[0],
-        nextSelector: document.getElementsByClassName("fa fa-angle-right fa-3x")[0],
+        previousSelector: document.getElementsByClassName("fa fa-angle-left fa-2x calMonthWeeksButton")[0],
+        nextSelector: document.getElementsByClassName("fa fa-angle-right fa-2x calMonthWeeksButton")[0],
         start: new Date(),
         onClick: (date, nb) => { // if nb is empty, nb is null
-          this.state.cal.jumpTo(new Date(date), true);
+          this.state.calMonthHours.jumpTo(new Date(date), true);
 	      }
       });
     }
-    /*var parser = function(data) {
-      var stats = {};
-      for (var d in data) {
-        stats[new Date(data[d].baslangic).getTime() / 1000] = data[d].toplamilerleme;
-      }
-
-      return stats;
-    }; */
-    /*cal.init({
-    legendColors: {
-    min: "#efefef",
-    max: "steelblue",
-    empty: "white"
-    // Will use the CSS for the missing keys
-    },
-    itemSelector: document.getElementsByClassName("cal")[0],
-    domain: "month",
-    subDomain: "day",
-    cellSize: 20,
-    subDomainTextFormat: "%d",
-    range: 1,
-    displayLegend: false,
-    onsiderMissingDataAsZero: true
-    }); */
-
-
-
-
-
-    /*cal.init({
-    itemSelector: document.getElementsByClassName("cal")[0],
-    legendColors: {
-    min: "#efefef",
-    max: "steelblue",
-    empty: "white"
-    // Will use the CSS for the missing keys
-    },
-    domain: "day",
-    data: "datas-years.json",
-    start: new Date(2000, 0),
-    cellSize: 9,
-    range: 15,
-    legend: [2, 4, 6, 8]
-    }); */
   }
 
   render() {
@@ -203,13 +143,13 @@ class App extends Component {
       return(
         <div>
           <FlatButton label="Subtract" onTouchTap={this.subtractFromDatabase} />
-          <FlatButton label="Add" onTouchTap={this.addToDatabase} />
-          <div className="cal1"></div>
-          <i className="fa fa-angle-left fa-3x" aria-hidden="true"></i>
-          <i className="fa fa-angle-right fa-3x" aria-hidden="true"></i>
-          <div className="cal"></div>
-          <i className="fa fa-angle-left fa-3x 1" aria-hidden="true"></i>
-          <i className="fa fa-angle-right fa-3x 2" aria-hidden="true"></i>
+          <FlatButton label="Add" onTouchTap={this.addToDatabase} /> <br />
+          <i className="fa fa-angle-left fa-2x calMonthWeeksButton" aria-hidden="true"></i>
+          <i className="fa fa-angle-right fa-2x calMonthWeeksButton" aria-hidden="true"></i>
+          <div className="calMonthWeeks"></div> <br />
+          <i className="fa fa-angle-left fa-2x 1 calMonthHoursButton" aria-hidden="true"></i>
+          <i className="fa fa-angle-right fa-2x calMonthHoursButton" aria-hidden="true"></i>
+          <div className="calMonthHours"></div>
         </div>
       );
     }
@@ -219,13 +159,3 @@ class App extends Component {
 App.childContextTypes = {
   muiTheme: React.PropTypes.object.isRequired,
 };
-
-export default AppContainer = createContainer(() => {
-
-  Meteor.subscribe('tasks');
-  var tasks = Tasks.find({}).fetch();
-
-  return {
-    tasks,
-  };
-}, App);

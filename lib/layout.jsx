@@ -1,10 +1,9 @@
 import React from 'react';
 
-export const layout = ({content, footer}) => (
+export const layout = ({content}) => (
   <div className="layout">
     <main>
       {content}
-      {footer}
     </main>
   </div>
 )

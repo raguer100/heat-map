@@ -8,6 +8,7 @@
     "cal-heatmap": "^3.6.2",
     "flexbox-react": "^4.3.1",
     "material-ui": "^0.17.1",
+    "moment": "^2.18.1",
     "react": "^15.4.2",
     "react-addons-pure-render-mixin": "^15.5.2",
     "react-dom": "^15.4.2",
