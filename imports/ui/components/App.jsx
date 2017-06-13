@@ -102,7 +102,14 @@ export default class App extends Component {
             array.push(new Date(date));
           }
 
-          this.state.calMonthHours.highlight(array);
+          if(array.length == 0) {
+            this.state.calMonthHours.highlight([]);
+            this.state.calMonthHours.update(nextProps.tasks, this.parser); //array i temizlemek için
+          } else {
+            this.state.calMonthHours.highlight(array);
+          }
+
+
 
           var maxHighlightDate = _.max(this.state.calMonthHours.options.highlight);
           var minHighlightDate = _.min(this.state.calMonthHours.options.highlight);
@@ -132,6 +139,8 @@ export default class App extends Component {
         nextSelector: document.getElementsByClassName("fa fa-angle-right fa-2x calMonthWeeksButton")[0],
         start: new Date(),
         onClick: (date, nb) => { // if nb is empty, nb is null
+          this.state.calMonthHours.highlight([]);
+          this.state.calMonthHours.update(nextProps.tasks, this.parser); //array i temizlemek için
           this.state.calMonthHours.jumpTo(new Date(date), true);
 	      }
       });
